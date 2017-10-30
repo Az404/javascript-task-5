@@ -12,6 +12,16 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
+    let handlers = {};
+
+    function getHandlers(event) {
+        if (!(event in handlers)) {
+            handlers[event] = [];
+        }
+
+        return handlers[event];
+    }
+
     return {
 
         /**
@@ -19,26 +29,52 @@ function getEmitter() {
          * @param {String} event
          * @param {Object} context
          * @param {Function} handler
+         * @returns {Object} emitter
          */
         on: function (event, context, handler) {
-            console.info(event, context, handler);
+            getHandlers(event).push({
+                context,
+                handler: function () {
+                    handler.call(context);
+                }
+            });
+
+            return this;
         },
 
         /**
          * Отписаться от события
          * @param {String} event
          * @param {Object} context
+         * @returns {Object} emitter
          */
         off: function (event, context) {
-            console.info(event, context);
+            Object.keys(handlers)
+                .filter(key => key === event || key.startsWith(`${key}.`))
+                .forEach(() => {
+                    handlers[event] = getHandlers(event).filter(h => h.context !== context);
+                });
+
+            return this;
         },
 
         /**
          * Уведомить о событии
          * @param {String} event
+         * @returns {Object} emitter
          */
         emit: function (event) {
-            console.info(event);
+            while (event !== '') {
+                getHandlers(event).forEach(h => h.handler());
+
+                let nextEventEnd = event.lastIndexOf('.');
+                if (nextEventEnd < 0) {
+                    nextEventEnd = 0;
+                }
+                event = event.slice(0, nextEventEnd);
+            }
+
+            return this;
         },
 
         /**
@@ -48,9 +84,26 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} times – сколько раз получить уведомление
+         * @returns {Object} emitter
          */
         several: function (event, context, handler, times) {
-            console.info(event, context, handler, times);
+            if (times <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            getHandlers(event).push({
+                context,
+                handler: function () {
+                    if (this.times <= 0) {
+                        return;
+                    }
+                    handler.call(context);
+                    this.times--;
+                },
+                times
+            });
+
+            return this;
         },
 
         /**
@@ -60,9 +113,25 @@ function getEmitter() {
          * @param {Object} context
          * @param {Function} handler
          * @param {Number} frequency – как часто уведомлять
+         * @returns {Object} emitter
          */
         through: function (event, context, handler, frequency) {
-            console.info(event, context, handler, frequency);
+            if (frequency <= 0) {
+                return this.on(event, context, handler);
+            }
+
+            getHandlers(event).push({
+                context,
+                handler: function () {
+                    if (this.callCount % frequency === 0) {
+                        handler.call(context);
+                    }
+                    this.callCount++;
+                },
+                callCount: 0
+            });
+
+            return this;
         }
     };
 }
