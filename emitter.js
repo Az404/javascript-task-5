@@ -64,7 +64,7 @@ function getEmitter() {
          * @returns {Object} emitter
          */
         emit: function (event) {
-            while (event !== '') {
+            do {
                 getHandlers(event).forEach(handler => handler.handler());
 
                 let nextEventEnd = event.lastIndexOf('.');
@@ -72,7 +72,7 @@ function getEmitter() {
                     nextEventEnd = 0;
                 }
                 event = event.slice(0, nextEventEnd);
-            }
+            } while (event !== '');
 
             return this;
         },
