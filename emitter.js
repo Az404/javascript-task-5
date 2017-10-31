@@ -51,7 +51,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             Object.keys(handlers)
-                .filter(key => key === event || key.startsWith(event + '.'))
+                .filter(key => key === event || key.startsWith(key + '.'))
                 .forEach(key => {
                     handlers[key] = getHandlers(key).filter(handler => handler.context !== context);
                 });
