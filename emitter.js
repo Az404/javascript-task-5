@@ -5,6 +5,7 @@
  * Реализованы методы several и through
  */
 getEmitter.isStar = true;
+
 module.exports = getEmitter;
 
 /**
