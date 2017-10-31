@@ -50,16 +50,11 @@ function getEmitter() {
          * @returns {Object} emitter
          */
         off: function (event, context) {
-            try {
-                Object.keys(handlers)
-                    .filter(key => key === event || key.startsWith(event + '.'))
-                    .forEach(key => {
-                        handlers[key] = getHandlers(key)
-                            .filter(handler => handler.context !== context);
-                    });
-            } catch (err) {
-                return this;
-            }
+            Object.keys(handlers)
+                .filter(key => key === event || key.startsWith(event + '.'))
+                .forEach(key => {
+                    handlers[key] = getHandlers(key).filter(handler => handler.context !== context);
+                });
 
             return this;
         },
