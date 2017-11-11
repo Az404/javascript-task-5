@@ -13,7 +13,7 @@ module.exports = getEmitter;
  * @returns {Object}
  */
 function getEmitter() {
-    let handlers = {};
+    const handlers = {};
 
     function getHandlers(event) {
         if (!(event in handlers)) {
@@ -35,7 +35,7 @@ function getEmitter() {
         on: function (event, context, handler) {
             getHandlers(event).push({
                 context,
-                handler: function () {
+                handler() {
                     handler.call(context);
                 }
             });
@@ -53,7 +53,7 @@ function getEmitter() {
             Object.keys(handlers)
                 .filter(key => key === event || key.startsWith(event + '.'))
                 .forEach(key => {
-                    handlers[key] = getHandlers(key).filter(handler => handler.context !== context);
+                    handlers[key] = handlers[key].filter(handler => handler.context !== context);
                 });
 
             return this;
@@ -94,12 +94,12 @@ function getEmitter() {
 
             getHandlers(event).push({
                 context,
-                handler: function () {
-                    if (this.times <= 0) {
-                        return;
-                    }
+                handler() {
                     handler.call(context);
                     this.times--;
+                    if (this.times <= 0) {
+                        handlers[event] = handlers[event].filter(h => h !== this);
+                    }
                 },
                 times
             });
@@ -123,7 +123,7 @@ function getEmitter() {
 
             getHandlers(event).push({
                 context,
-                handler: function () {
+                handler() {
                     if (this.callCount % frequency === 0) {
                         handler.call(context);
                     }
